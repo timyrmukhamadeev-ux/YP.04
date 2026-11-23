@@ -1,0 +1,169 @@
+SELECT @@SERVERNAME AS ServerName;
+SELECT @@VERSION AS ServerVersion;
+GO
+
+CREATE DATABASE HelpDesk_Muhamadeev
+GO
+
+USE HelpDesk_Muhamadeev
+GO
+
+CREATE TABLE Roles2131
+(
+  Id INT IDENTITY(1,1) PRIMARY KEY,
+  Name NVARCHAR (50) NOT NULL UNIQUE
+);
+GO
+
+CREATE TABLE Categories2131
+(
+  Id INT IDENTITY(1,1) PRIMARY KEY,
+  Name NVARCHAR (100) NOT NULL UNIQUE
+);
+GO
+
+CREATE TABLE Priorities2131
+(
+  Id INT IDENTITY(1,1) PRIMARY KEY,
+  Name NVARCHAR (50) NOT NULL UNIQUE,
+  SortOrder INT NOT NULL
+);
+GO
+
+CREATE TABLE Statuses2131
+(
+  Id INT IDENTITY(1,1) PRIMARY KEY,
+  Name NVARCHAR (50) NOT NULL UNIQUE
+);
+GO
+
+CREATE TABLE Users2131
+(
+  Id INT IDENTITY(1,1) PRIMARY KEY,
+  Name NVARCHAR (50) NOT NULL UNIQUE,
+  PasswordHash NVARCHAR(255) NOT NULL,
+  FullName NVARCHAR(150) NOT NULL,
+  RoleId INT NOT NULL,
+  IsActive BIT NOT NULL DEFAULT 1,
+  CONSTRAINT FK_Users_Roles
+  FOREIGN KEY (RoleId) REFERENCES Roles2131(Id)
+);
+GO
+
+CREATE TABLE Tickets
+(
+  Id INT IDENTITY (1,1) PRIMARY KEY,
+  UserId INT NOT NULL,
+  CategoryId INT NOT NULL,
+  Description NVARCHAR(1000) NOT NULL,
+  PriorityId INT NOT NULL,
+  StatusId INT NOT NULL,
+  AssignedUserId INT NULL,
+  CreateAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+  UpdatedAt DATETIME2 NULL,
+
+  CONSTRAINT FK_Tickets_Users
+  FOREIGN KEY (UserId) REFERENCES Users2131(Id),
+  CONSTRAINT FK_Tickets_Categories
+  FOREIGN KEY (CategoryId) REFERENCES Categories2131(Id),
+  CONSTRAINT FK_Tickets_Priorities
+  FOREIGN KEY (PriorityId) REFERENCES Priorities2131(Id),
+  CONSTRAINT FK_Tickets_Statuses
+  FOREIGN KEY (StatusId) REFERENCES Statuses2131(Id),
+  CONSTRAINT FK_Tickets_AssignedUser
+  FOREIGN KEY (AssignedUserId) REFERENCES Users2131(Id)
+
+);
+GO
+
+INSERT INTO Roles2131 (Name)
+VALUES
+(N'Пользователь'),
+(N'Специалист'),
+(N'Администратор');
+GO
+
+SELECT * FROM Roles2131;
+
+
+INSERT INTO Categories2131 (Name)
+VALUES
+(N'Обородувание'),
+(N'Программное обеспечение'),
+(N'Сеть'),
+(N'Учетная запись'),
+(N'Периферия'),
+(N'Другое');
+GO
+
+SELECT * FROM Categories2131;
+
+INSERT INTO Priorities2131 (Name, SortOrder)
+VALUES
+(N'Низкий'),
+(N'Средний'),
+(N'Высокий');
+GO
+
+SELECT * FROM Priorities2131 ORDER BY SortOrder;
+
+INSERT INTO Statuses2131 (Name)
+VALUES
+(N'Новая'),
+(N'В работе'),
+(N'Выполнена'),
+(N'Отклонена');
+GO
+
+SELECT * FROM Statuses2131;
+
+INSERT INTO Users2131
+ (Login, PasswordHash, FullName, RoleId, IsActive)
+VALUES
+(N'Admin', N'TEMP_ADMIN', N'Администратор системы', 3, 1),
+(N'support1', N'TEMP_SUPPORT', N'Специалист технической поддержки', 2, 1),
+(N'user1', N'TEMP_USER', N'Тестовый пользователь', 1, 1);
+GO
+
+SELECT Id, Login, FullName, RoleId, IsActive
+FROM Users2131;
+
+INSERT INTO Tickets
+(UserId, CategoryId, Description, PriorityId, StatusId, AssignedUserId)
+VALUES
+(3, 3, N'Нет доступа в Интернет', 3, 1, NULL),
+(3, 2, N'Не запускается Microsoft Word', 2, 2, 2),
+(3, 1, N'Не включается компьютер', 3, 2, 2),
+(3, 5, N'Не работает принтер', 2, 1, NULL),
+(3, 4, N'Не удается войти в учетную запись', 3, 4, 2);
+GO
+
+SELECT * FROM Tickets;
+
+SELECT
+t.Id,
+u.FullName AS [Пользователь],
+c.Name AS [Категория],
+t.Description AS [Описание],
+p.Name AS [Приоритет],
+s.Name AS [Статус],
+t.CreateAt AS [Дата создания]
+FROM Tickets AS t
+INNER JOIN Users2131 AS u ON t.UserId = u.Id
+INNER JOIN Categories2131 AS c ON t.CategoryId = c.Id
+INNER JOIN Priorities2131 AS p ON t.CategoryId = p.Id
+INNER JOIN  Statuses2131 AS s ON t.StatusId = s.Id;
+
+INSERT INTO Categories2131 (Name)
+VALUES (N'Сеть');
+
+INSERT INTO Tickets
+(UserId, CategoryId, Description, PriorityId, StatusId)
+VALUES
+(9999, 3, N'Проверка внешнего ключа', 2, 1);
+
+SELECT TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_TYPE = 'BASE TABLE'
+ORDER BY TABLE_NAME;
+
